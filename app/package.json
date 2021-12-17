@@ -1,0 +1,12 @@
+{
+  "name": "p4-tc-rr-app",
+  "version": "1.0.0",
+  "description": "Angular 13 with Electron 16 (Typescript + SASS + Hot Reload)",
+  "author": {
+    "name": "Sandip Chitale",
+    "email": "sandipchitale@gmail.com"
+  },
+  "main": "main.js",
+  "private": true,
+  "dependencies": {}
+}

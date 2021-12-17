@@ -1,0 +1,119 @@
+<div style="height: 100vh; width:100vw;" class="p-px-2 drag">
+  <div class="no-drag p-d-flex p-flex-column p-jc-around">
+    <div class="drag p-fluid">
+      <div class="p-grid">
+        <h2 class="p-col-11 p-ml-3"><img width="24" class="p-mr-2" src="assets/icons/favicon.png">Perforce Teamcity Remote Run Runner &trade; (v{{ version }})</h2>
+        <p-button icon="pi pi-times" styleClass="no-drag p-col-1 p-ml-5 p-mt-3 p-button-text" (click)="quit()"></p-button>
+      </div>
+    </div>
+    <p-card header="Authentication" class="p-mb-2">
+      <div class="p-fluid">
+        <div class="p-field p-grid">
+          <label for="host-colon-port" class="p-col-2 p-mb-2">Perforce Host:port <span style="color: red;" class="p-mx-1 p-text-bold">*</span>:</label>
+          <div class="p-col-4">
+            <input id="host-colon-port" type="text" pInputText [(ngModel)]="perforce.hostColonPort" required placeholder="10.9.17.32:1667"/>
+          </div>
+          <label for="user" class="p-col-1 p-mb-2">User <span style="color: red;" class="p-mx-1 p-text-bold">*</span>:</label>
+          <div class="p-col-3">
+            <input id="user" type="text" pInputText [(ngModel)]="perforce.user" required/>
+          </div>
+          <div class="p-col-2 p-text-right">
+            <p-button icon="pi pi-play" styleClass="p-mr-2" (click)="loginIntoPerforce()" [disabled]="perforceLoggedIn" title="Login into Perforce {{ perforce.hostColonPort }} as user {{ perforce.user }}"></p-button>
+            <p-button icon="pi pi-power-off" styleClass="p-mr-2" (click)="logoutOfPerforce()" [disabled]="!perforceLoggedIn" title="Logout of Perforce {{ teamcity.url }} as user {{ perforce.user }}"></p-button>
+            <ng-container *ngIf="perforceLoggedIn; else notLoggedIntoPerforce">
+              <p-avatar icon="pi pi-bell" shape="circle" styleClass="p-mb-1" [style]="{ 'background-color': 'green' }"></p-avatar>
+            </ng-container>
+            <ng-template #notLoggedIntoPerforce>
+              <p-avatar icon="pi pi-bell" shape="circle" styleClass="p-mb-1" [style]="{ 'background-color': 'orange' }"></p-avatar>
+            </ng-template>
+          </div>
+        </div>
+        <div class="p-field p-grid">
+          <label for="url" class="p-col-2 p-mb-2">Teamcity URL <span style="color: red;" class="p-mx-1 p-text-bold">*</span>:</label>
+          <div class="p-col-4">
+            <input id="url" type="text" pInputText [(ngModel)]="teamcity.url" required placeholder="http://iatc.otxlab.net:8111/" />
+          </div>
+          <label for="user" class="p-col-1 p-mb-2">User <span style="color: red;" class="p-mx-1 p-text-bold">*</span>:</label>
+          <div class="p-col-3">
+            <input id="user" type="text" pInputText [(ngModel)]="teamcity.user" required placeholder=".lab@otxlab.net"/>
+          </div>
+          <div class="p-col-2 p-text-right">
+            <p-button icon="pi pi-play" styleClass="p-mr-2" (click)="loginIntoTeamcity()" [disabled]="teamcityLoggedIn" title="Login into Teamcity {{ teamcity.url }} as user {{ teamcity.user }}"></p-button>
+            <p-button icon="pi pi-power-off" styleClass="p-mr-2" (click)="logoutOfTeamcity()" [disabled]="!teamcityLoggedIn" title="Logout of Teamcity {{ teamcity.url }}"></p-button>
+            <ng-container *ngIf="teamcityLoggedIn; else notLoggedIntoTeamcity">
+              <p-avatar icon="pi pi-bell" shape="circle" styleClass="p-mb-1" [style]="{ 'background-color': 'green' }"></p-avatar>
+            </ng-container>
+            <ng-template #notLoggedIntoTeamcity>
+              <p-avatar icon="pi pi-bell" shape="circle" styleClass="p-mb-1" [style]="{ 'background-color': 'orange' }"></p-avatar>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </p-card>
+    <p-card header="Perforce Workspace, Changelists and Files" class="p-mb-2">
+      <div class="p-fluid">
+        <div class="p-field p-grid">
+          <label for="workspace" class="p-col-2 p-mb-2">Workspace <span style="color: red;" class="p-mx-1 p-text-bold">*</span>:</label>
+          <div class="p-col-10">
+            <input id="workspace" type="text" pInputText required [(ngModel)]="perforce.workspace"/>
+          </div>
+        </div>
+        <div class="p-field p-grid">
+          <label for="changelists" class="p-col-2 p-mb-2">Changelists :</label>
+          <div class="p-col-10">
+            <p-dropdown
+              [options]="perforceChangelists"
+              [(ngModel)]="selectedPerforceChangelist"
+              optionLabel="changelistLabel"
+              (onChange)="loadPerforceChangelistFiles()"></p-dropdown>
+          </div>
+        </div>
+        <div class="p-field p-grid">
+          <label for="files" class="p-col-2 p-mb-2">Files :</label>
+        </div>
+        <div class="p-field p-grid">
+          <div class="p-col-12">
+            <p-listbox id="files"
+              [options]="perforceChangelistFiles"
+              [readonly]="true"
+              [style]="{ 'height': '15vh', 'overflow': 'scroll', 'cursor': loadingPerforceChangelistFiles ? 'wait' : 'default'}"
+              [listStyle]="{ 'cursor': loadingPerforceChangelistFiles ? 'wait' : 'default'}"></p-listbox>
+          </div>
+        </div>
+      </div>
+    </p-card>
+    <p-card header="Teamcity Configurations" class="p-mb-2">
+      <div class="p-fluid">
+        <div class="p-field p-grid">
+          <label for="configurations" class="p-col-2 p-mb-2">Configurations :</label>
+          <label for="configurations" class="p-col-10 p-mb-2">
+            <p-checkbox
+              [(ngModel)]="allConfigurationsForBranch"
+              [binary]="true"
+              styleClass="p-mr-2"
+              (onChange)="loadTeamcityConfigurations()"></p-checkbox>
+            All configurations for selected branch
+          </label>
+        </div>
+        <div class="p-field p-grid">
+          <div class="p-col-12">
+            <p-listbox id="configurations"
+              [options]="teamcityConfigurations"
+              [(ngModel)]="selectedConfigurations"
+              [checkbox]="true"
+              [style]="{ 'height': '15vh', 'overflow': 'scroll', 'cursor': loadingTeamcityConfigurations ? 'wait' : 'default'}"
+              [listStyle]="{ 'cursor': loadingTeamcityConfigurations ? 'wait' : 'default'}"></p-listbox>
+          </div>
+        </div>
+        <div class="p-field p-grid">
+          <div class="p-col-12 p-text-center">
+            <p-button
+              label="Run Remote Run..."
+              (click)="runRemoteRun()"
+              [disabled]="perforceChangelistFiles.length === 0 || selectedConfigurations.length === 0"></p-button>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>
