@@ -40,6 +40,18 @@ const PERFORCE_BRANCH_TO_TEAMCITY_PROJECT_ID_MAP = {
 	'rel_IA_16EP5':   'InfoArchive_165'
 };
 
+const ADD_OPENS= [
+  '--add-opens java.base/java.io=ALL-UNNAMED',
+  '--add-opens java.base/java.lang=ALL-UNNAMED',
+  '--add-opens java.base/java.lang.reflect=ALL-UNNAMED',
+  '--add-opens java.base/java.nio=ALL-UNNAMED',
+  '--add-opens java.base/java.nio.charset=ALL-UNNAMED',
+  '--add-opens java.base/java.text=ALL-UNNAMED',
+  '--add-opens java.base/java.time=ALL-UNNAMED',
+  '--add-opens java.base/java.util=ALL-UNNAMED',
+  '--add-opens java.desktop/java.awt.font=ALL-UNNAMED',
+];
+
 interface IPerforce {
   hostColonPort: string;
   user: string;
@@ -161,7 +173,7 @@ export class AppComponent implements OnInit {
       });
     });
     this.ngzone.runOutsideAngular(async () => {
-      this.childProcess.exec(`java -jar ${this.tcc9xxJar} info --host ${this.teamcity.url}`, async (err, stdout, stderr) => {
+      this.childProcess.exec(`java ${ADD_OPENS.join(' ')} -jar ${this.tcc9xxJar} info --host ${this.teamcity.url}`, async (err, stdout, stderr) => {
         this.ngzone.run(async () => {
           if (err) {
             this.teamcityLoggedIn = false;
@@ -218,7 +230,7 @@ export class AppComponent implements OnInit {
                     description = descriptionLines.join(' ');
                   }
                   pendingChangelistsLines.push(`${changelistLine} ${description}`);
-                  changeLine = undefined;
+                  changeLine = line;
                   descriptionLines = [];
                 } else {
                   changeLine = line;
@@ -279,7 +291,7 @@ export class AppComponent implements OnInit {
 
   public loginIntoTeamcity() {
     this.ngzone.runOutsideAngular(async () => {
-      this.childProcess.exec(`start /wait "Teamcity Login" cmd /c java -jar ${this.tcc9xxJar} login --host ${this.teamcity.url} --user ${this.teamcity.user}`, async (err, stdout, stderr) => {
+      this.childProcess.exec(`start /wait "Teamcity Login" cmd /c java ${ADD_OPENS.join(' ')} -jar ${this.tcc9xxJar} login --host ${this.teamcity.url} --user ${this.teamcity.user}`, async (err, stdout, stderr) => {
         this.ngzone.run(async () => {
           if (err) {
             this.teamcityLoggedIn = false;
@@ -293,7 +305,7 @@ export class AppComponent implements OnInit {
 
   public logoutOfTeamcity() {
     this.ngzone.runOutsideAngular(async () => {
-      this.childProcess.exec(`java -jar ${this.tcc9xxJar} logout --host ${this.teamcity.url}`, async (err, stdout, stderr) => {
+      this.childProcess.exec(`java ${ADD_OPENS.join(' ')} -jar ${this.tcc9xxJar} logout --host ${this.teamcity.url}`, async (err, stdout, stderr) => {
         this.ngzone.run(async () => {
           this.teamcityLoggedIn = false;
           this.teamcityConfigurations = [];
@@ -352,7 +364,7 @@ export class AppComponent implements OnInit {
         }
         if (this.teamcityProjectId) {
           this.ngzone.runOutsideAngular(async () => {
-            this.childProcess.exec(`java -jar ${this.tcc9xxJar} info -p ${this.teamcityProjectId}`, async (err, stdout, stderr) => {
+            this.childProcess.exec(`java ${ADD_OPENS.join(' ')} -jar ${this.tcc9xxJar} info -p ${this.teamcityProjectId}`, async (err, stdout, stderr) => {
               this.ngzone.run(async () => {
                 this.loadingTeamcityConfigurations = false;
                 if (err) {
@@ -384,7 +396,7 @@ export class AppComponent implements OnInit {
     this.fs.writeFileSync(pendingChangelistFilelistFile, this.perforceChangelistFiles.join('\n'));
     console.log(``);
 
-    this.childProcess.exec(`cmd /K start echo Use the following command to run a remote run... ^^^& echo java -jar ${this.tcc9xxJar} run -n --force-compatibility-check -c ${this.selectedConfigurations} -m "${this.selectedPerforceChangelist.changelistLabel}" @${pendingChangelistFilelistFile}`, async (err, stdout, stderr) => {
+    this.childProcess.exec(`cmd /K start echo Use the following command to run a remote run... ^^^& echo java ${ADD_OPENS.join(' ')} -jar ${this.tcc9xxJar} run -n --force-compatibility-check --force-compatibility-check -c ${this.selectedConfigurations} -m "${this.selectedPerforceChangelist.changelistLabel}" @${pendingChangelistFilelistFile}`, async (err, stdout, stderr) => {
       this.ngzone.run(async () => {
         if (err) {
           return;
